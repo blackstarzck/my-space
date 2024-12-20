@@ -3,13 +3,15 @@ import { EventEmitter } from "events";
 import Experience from "../../Experience.js";
 
 import { Capsule } from "three/examples/jsm/Addons.js";
-import { velocity } from "three/tsl";
+
 
 export default class Player extends EventEmitter {
   constructor(){
     super();
     this.experience = new Experience();
+    this.time = this.experience.time;
     this.camera = this.experience.camera;
+    this.octree = this.experience.world.octree;
 
     this.initPlayer();
     this.initControls();
@@ -25,9 +27,9 @@ export default class Player extends EventEmitter {
     this.player.gravity = 60;
 
     this.player.spawn = {
-      position: new THREE.Vector3(0, 0, 0),
-      rotation: new THREE.Euler(0, 0, 0),
-      velocity: new THREE.Vector3(0, 0, 0),
+      position: new THREE.Vector3(),
+      rotation: new THREE.Euler(),
+      velocity: new THREE.Vector3(),
     };
 
     this.player.raycaster = new THREE.Raycaster();
@@ -109,4 +111,112 @@ export default class Player extends EventEmitter {
       Math.PI / 2
     );
   };
+
+  playerCollisions(){
+     // check for collisions (player.collider: Capsule)
+    const result = this.octree.capsuleIntersect(this.player.collider);
+
+    this.player.onFloor = false;
+
+    if(result){
+      this.player.onFloor = result.normal.y > 0;
+      this.player.collider.translate(
+        result.normal.multiplyScalar(result.depth)
+      );
+    }
+  }
+
+  getForwardVector(){
+    // get forward vector of the player
+    this.camera.perspectiveCamera.getWorldDirection(this.player.direction);
+    this.player.direction.y = 0;
+    this.player.direction.normalize(); // normalize the vector
+
+    return this.player.direction;
+  }
+
+  getSideVector() {
+    this.camera.perspectiveCamera.getWorldDirection(this.player.direction);
+    this.player.direction.y = 0;
+    this.player.direction.normalize();
+    this.player.direction.cross(this.camera.perspectiveCamera.up); // get side vector
+
+    return this.player.direction;
+  }
+
+  spawnPlayerOutOfBounds(){
+    const spawnPos = new THREE.Vector3(12.64, 1.7 + 0.5, 64.0198);
+
+    this.player.velocity = this.player.spawn.velocity;
+    this.player.body.position.copy(spawnPos);
+
+    this.player.collider.start.copy(spawnPos);
+    this.player.collider.end.copy(spawnPos);
+
+    this.player.collider.end.y += this.player.height;
+  }
+
+  update(){
+    const speed =
+      (this.player.onFloor ? 1.75 : 0.2) *
+      this.player.gravity *
+      this.player.speedMultiplier;
+
+    // amount of distance we  travel between each frame
+    let speedDelta = this.time.delta * speed;
+
+    if(this.actions.run) speedDelta *= 1.6;
+
+    if (this.actions.forward) {
+      this.player.velocity.add(
+        this.getForwardVector().multiplyScalar(speedDelta)
+      );
+    };
+    if (this.actions.backward) {
+      this.player.velocity.add(
+        this.getForwardVector().multiplyScalar(-speedDelta * 0.5)
+      );
+    };
+    if (this.actions.left) {
+      this.player.velocity.add(
+        this.getSideVector().multiplyScalar(-speedDelta * 0.75)
+      );
+    };
+    if (this.actions.right) {
+      this.player.velocity.add(
+        this.getSideVector().multiplyScalar(speedDelta * 0.75)
+      );
+    };
+    if(this.player.onFloor){
+      if(this.actions.jump){
+        this.player.velocity.y = 30;
+      }
+    };
+
+    // easing in, easing out when jumping. this is for a more natural jump
+    let damping = Math.exp(-5 * this.time.delta) - 1;
+
+    if (!this.player.onFloor) {
+      this.player.velocity.y -= this.player.gravity * this.time.delta;
+      // when moving and jum at the same time, the speed slow down.
+      // for a more natural jump, we need to add damping to the velocity
+      damping *= 0.1;
+    }
+
+    this.player.velocity.addScaledVector(this.player.velocity, damping);
+
+    const deltaPosition = this.player.velocity
+      .clone()
+      .multiplyScalar(this.time.delta);
+
+    this.player.collider.translate(deltaPosition);
+    this.playerCollisions();
+
+    this.player.body.position.copy(this.player.collider.end);
+    this.player.body.updateMatrixWorld();
+
+    if (this.player.body.position.y < -20) {
+      this.spawnPlayerOutOfBounds();
+    }
+  }
 }

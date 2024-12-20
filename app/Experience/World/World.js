@@ -21,7 +21,6 @@ export default class World extends EventEmitter {
     this.localStorage = this.experience.localStorage;
     this.state = this.localStorage.state;
 
-    console.log("this.state.location ", this.state.location)
     this.resources.determineLoad(this.state.location);
 
     this.player = null;
@@ -56,6 +55,6 @@ export default class World extends EventEmitter {
   }
 
   update() {
-    // if (this.player) this.player.update();
+    if (this.player) this.player.update();
   }
 }
