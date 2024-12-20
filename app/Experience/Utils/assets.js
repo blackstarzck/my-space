@@ -45,18 +45,18 @@ export default [{
         type: "imageTexture",
         path: "/textures/walls_baked.webp",
       },
-      // {
-      //   name: "skyBoxTexture",
-      //   type: "cubeTexture",
-      //   path: [
-      //     "/textures/skybox/px.webp",
-      //     "/textures/skybox/nx.webp",
-      //     "/textures/skybox/py.webp",
-      //     "/textures/skybox/ny.webp",
-      //     "/textures/skybox/pz.webp",
-      //     "/textures/skybox/nz.webp",
-      //   ],
-      // },
+      {
+        name: "skyBoxTexture",
+        type: "cubeTexture",
+        path: [
+          "/textures/skybox/px.webp",
+          "/textures/skybox/nx.webp",
+          "/textures/skybox/py.webp",
+          "/textures/skybox/ny.webp",
+          "/textures/skybox/pz.webp",
+          "/textures/skybox/nz.webp",
+        ],
+      },
     ],
   },
   castleInterior: {

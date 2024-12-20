@@ -22,6 +22,7 @@ export default class Loaders {
     this.loaders.dracoLoader.setDecoderPath("/draco/");
     this.loaders.gltfLoader.setDRACOLoader(this.loaders.dracoLoader);
 
+    // THREE.Texture 객체가 로드된다.
     this.loaders.textureLoader = new THREE.TextureLoader();
   }
 }
