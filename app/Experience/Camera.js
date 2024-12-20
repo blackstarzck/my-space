@@ -18,7 +18,7 @@ export default class Camera {
     };
 
     this.setPerspectiveCamera();
-    this.setOrbitControls();
+    // this.setOrbitControls();
   }
 
   setPerspectiveCamera() {
@@ -45,6 +45,6 @@ export default class Camera {
   }
 
   update() {
-    this.controls.update();
+    // this.controls.update();
   }
 }
